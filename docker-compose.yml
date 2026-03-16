@@ -25,9 +25,9 @@ services:
     image: postgres:16-alpine             # Lightweight Alpine-based PostgreSQL
     container_name: swarm-postgres
     environment:
-      POSTGRES_DB: swarm_drone            # Database name
-      POSTGRES_USER: postgres             # Username
-      POSTGRES_PASSWORD: postgres         # Password (change in production!)
+      POSTGRES_DB: ${POSTGRES_DB:-swarm_drone}            # Database name
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}           # Username
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}   # Password (change in production!)
     ports:
       - "5432:5432"                       # Expose PostgreSQL port
     volumes:
@@ -55,9 +55,9 @@ services:
     environment:
       DB_HOST: postgres                   # Database hostname (Docker internal DNS)
       DB_PORT: 5432
-      DB_NAME: swarm_drone
-      DB_USER: postgres
-      DB_PASS: postgres
+      DB_NAME: ${POSTGRES_DB:-swarm_drone}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASS: ${POSTGRES_PASSWORD:-postgres}
       ANOMALY_SERVICE_URL: http://anomaly:8003  # Inter-service communication
       SIMULATE_TELEMETRY: "true"          # Enable simulation mode
       SIM_INTERVAL_MS: "3000"             # Generate data every 3 seconds
@@ -82,9 +82,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: swarm_drone
-      DB_USER: postgres
-      DB_PASS: postgres
+      DB_NAME: ${POSTGRES_DB:-swarm_drone}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASS: ${POSTGRES_PASSWORD:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
@@ -179,8 +179,8 @@ services:
     ports:
       - "3001:3000"                       # Grafana UI: http://localhost:3001
     environment:
-      GF_SECURITY_ADMIN_USER: admin       # Grafana admin username
-      GF_SECURITY_ADMIN_PASSWORD: admin   # Grafana admin password
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}           # Grafana admin username
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD:-admin}   # Grafana admin password
       GF_USERS_ALLOW_SIGN_UP: "false"     # Disable public sign-up
     volumes:
       - grafana_data:/var/lib/grafana                                                        # Persistent data

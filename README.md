@@ -11,6 +11,25 @@ A full-scale **microservices** project that simulates swarm drone flights, detec
 
 ---
 
+## Screenshots
+
+### Live Map — Real-Time Drone Tracking
+![Dashboard Live Map](docs/screenshots/dashboard-live-map.png)
+
+### Alerts Panel — Anomaly Notifications
+![Dashboard Alerts](docs/screenshots/dashboard-alerts.png)
+
+### Statistics Panel — System Overview
+![Dashboard Statistics](docs/screenshots/dashboard-statistics.png)
+
+### Grafana — Service Monitoring Dashboard
+![Grafana Dashboard](docs/screenshots/grafana-dashboard.png)
+
+### Prometheus — Metrics Targets
+![Prometheus Targets](docs/screenshots/prometheus-targets.png)
+
+---
+
 ## What Does This Project Do?
 
 This project simulates **5 drones** flying over Istanbul and provides a complete monitoring system:
@@ -212,6 +231,7 @@ swarm-drone-tracking/
 │       └── ci-cd.yml                 # GitHub Actions CI/CD pipeline
 │
 ├── docker-compose.yml                # Single-file deployment for all 9 services
+├── .env.example                     # Environment variables template (copy to .env)
 ├── .gitignore
 └── README.md
 ```

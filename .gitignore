@@ -31,6 +31,9 @@ npm-debug.log*
 # React Build
 frontend/dashboard/build/
 
+# Environment variables (sensitive)
+.env
+
 # Docker
 docker-compose.override.yml
 
