@@ -3,6 +3,29 @@ package com.swarm.dronemgmt.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * DRONE ENTITY - Database Model for Drone Metadata
+ * ===================================================
+ * This JPA entity maps to the "drones" table in PostgreSQL.
+ * Stores static information about each drone in the swarm.
+ *
+ * Fields:
+ *   - id              : Auto-generated primary key (internal use only)
+ *   - droneId         : Human-readable drone identifier (e.g., "DR-001") - unique
+ *   - model           : Drone hardware model (e.g., "DJI Matrice 300")
+ *   - mission         : Currently assigned mission (e.g., "Recon Mission Alpha")
+ *   - team            : Team assignment (e.g., "Team-1")
+ *   - status          : Current operational status (ACTIVE, IDLE, MAINTENANCE, OFFLINE)
+ *   - maxSpeed        : Maximum allowed speed in m/s
+ *   - maxAltitude     : Maximum allowed altitude in meters
+ *   - batteryCapacity : Battery capacity in percentage
+ *   - createdAt       : When this drone was registered
+ *   - updatedAt       : When this drone's info was last updated
+ *
+ * JPA Lifecycle Callbacks:
+ *   @PrePersist → Automatically sets createdAt and updatedAt when first saved
+ *   @PreUpdate  → Automatically updates updatedAt on every modification
+ */
 @Entity
 @Table(name = "drones")
 public class Drone {
@@ -12,47 +35,55 @@ public class Drone {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String droneId;
+    private String droneId;            // e.g., "DR-001" (unique identifier)
 
     @Column(nullable = false)
-    private String model;
+    private String model;              // e.g., "DJI Matrice 300"
 
     @Column
-    private String mission;
+    private String mission;            // e.g., "Recon Mission Alpha"
 
     @Column
-    private String team;
+    private String team;               // e.g., "Team-1"
 
     @Column
-    private String status; // ACTIVE, IDLE, MAINTENANCE, OFFLINE
+    private String status;             // ACTIVE, IDLE, MAINTENANCE, OFFLINE
 
     @Column
-    private Double maxSpeed;
+    private Double maxSpeed;           // Maximum speed limit (m/s)
 
     @Column
-    private Double maxAltitude;
+    private Double maxAltitude;        // Maximum altitude limit (meters)
 
     @Column
-    private Double batteryCapacity;
+    private Double batteryCapacity;    // Battery capacity (%)
 
     @Column
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt;   // Registration timestamp
 
     @Column
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;   // Last update timestamp
 
+    /**
+     * JPA lifecycle callback - runs before the entity is first saved.
+     * Automatically sets creation and update timestamps.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * JPA lifecycle callback - runs before every update.
+     * Automatically refreshes the update timestamp.
+     */
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    // ─── Getters & Setters ───
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

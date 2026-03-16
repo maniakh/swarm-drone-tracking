@@ -1,26 +1,45 @@
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║           PROMETHEUS ALERT RULES                            ║
+# ╠═══════════════════════════════════════════════════════════════╣
+# ║  These rules define when Prometheus should fire alerts.     ║
+# ║  Alerts are evaluated every 15 seconds (evaluation_interval)║
+# ║                                                               ║
+# ║  Note: These alerts are different from drone anomaly alerts. ║
+# ║  These monitor the SYSTEM health (services up/down, etc.)   ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
 groups:
   - name: drone_alerts
     rules:
+
+      # ALERT 1: High anomaly rate
+      # Fires when anomalies are being detected too frequently
+      # This might indicate a system-wide issue or environmental problem
       - alert: HighAnomalyRate
-        expr: rate(anomalies_detected_total[5m]) > 0.5
-        for: 2m
+        expr: rate(anomalies_detected_total[5m]) > 0.5    # More than 0.5 anomalies/sec over 5 minutes
+        for: 2m                                             # Must persist for 2 minutes
         labels:
           severity: warning
         annotations:
           summary: "High anomaly rate detected"
           description: "Anomaly rate in the last 5 minutes: {{ $value }}/s"
 
+      # ALERT 2: Service down
+      # Fires when any monitored service becomes unreachable
+      # "up == 0" means Prometheus can't scrape the service
       - alert: ServiceDown
         expr: up == 0
-        for: 1m
+        for: 1m                                             # Service must be down for 1 minute
         labels:
           severity: critical
         annotations:
           summary: "{{ $labels.job }} service is down"
           description: "{{ $labels.instance }} has been unreachable for more than 1 minute"
 
+      # ALERT 3: High telemetry error rate
+      # Fires when telemetry processing errors are occurring frequently
       - alert: HighTelemetryErrors
-        expr: rate(telemetry_errors_total[5m]) > 0.1
+        expr: rate(telemetry_errors_total[5m]) > 0.1       # More than 0.1 errors/sec
         for: 3m
         labels:
           severity: warning

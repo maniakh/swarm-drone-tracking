@@ -1,45 +1,69 @@
+# ╔═══════════════════════════════════════════════════════════════════╗
+# ║        GITHUB ACTIONS CI/CD PIPELINE                            ║
+# ╠═══════════════════════════════════════════════════════════════════╣
+# ║  This pipeline runs automatically on every push/PR:             ║
+# ║                                                                   ║
+# ║  Step 1: test-java       → Build all 4 Java services with Maven ║
+# ║  Step 2: verify-frontend → Check that static files exist        ║
+# ║  Step 3: docker-build    → Build all Docker images              ║
+# ║  Step 4: deploy          → Deploy with docker compose (main only)║
+# ║                                                                   ║
+# ║  Pipeline diagram:                                                ║
+# ║    push → [test-java] ──┐                                        ║
+# ║         → [verify-front]──→ [docker-build] → [deploy]           ║
+# ╚═══════════════════════════════════════════════════════════════════╝
+
 name: Swarm Drone CI/CD Pipeline
 
+# When to run this pipeline
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop]    # Run on pushes to main and develop branches
   pull_request:
-    branches: [main]
+    branches: [main]             # Run on PRs targeting main
 
+# Environment variables for Docker builds
 env:
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_BUILDKIT: 1             # Enable BuildKit for faster builds
+  COMPOSE_DOCKER_CLI_BUILD: 1    # Use Docker CLI for compose builds
 
 jobs:
-  # ─── Java Services Test ───
+  # ─────────────────────────────────────────────────
+  # JOB 1: Build & Test Java Services
+  # Uses a matrix strategy to build all 4 services in parallel
+  # ─────────────────────────────────────────────────
   test-java:
     name: Test Java Services
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # Each service is built independently (parallel execution)
         service: [telemetry, anomaly, alert, drone-mgmt]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4           # Clone the repository
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17                 # Install Java 17 (Temurin distribution)
         uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Cache Maven packages
+      - name: Cache Maven packages           # Cache dependencies to speed up builds
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build with Maven
+      - name: Build with Maven               # Compile and package each service
         run: |
           cd backend/${{ matrix.service }}
-          mvn clean package -DskipTests -B
+          mvn clean package -DskipTests -B   # -B = batch mode (no interactive prompts)
 
-  # ─── Frontend Verify ───
+  # ─────────────────────────────────────────────────
+  # JOB 2: Verify Frontend Static Files
+  # Since frontend is CDN-based (no npm build), just verify files exist
+  # ─────────────────────────────────────────────────
   verify-frontend:
     name: Verify Frontend Dashboard
     runs-on: ubuntu-latest
@@ -48,21 +72,26 @@ jobs:
 
       - name: Verify static files exist
         run: |
-          test -f frontend/dashboard/public/index.html && echo "✅ index.html found"
-          test -f frontend/dashboard/public/app.js && echo "✅ app.js found"
-          test -f frontend/dashboard/public/style.css && echo "✅ style.css found"
+          test -f frontend/dashboard/public/index.html && echo "index.html found"
+          test -f frontend/dashboard/public/app.js && echo "app.js found"
+          test -f frontend/dashboard/public/style.css && echo "style.css found"
 
-  # ─── Docker Build ───
+  # ─────────────────────────────────────────────────
+  # JOB 3: Build Docker Images
+  # Builds Docker images for all services
+  # Only runs after Java tests and frontend verification pass
+  # ─────────────────────────────────────────────────
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [test-java, verify-frontend]
+    needs: [test-java, verify-frontend]     # Wait for previous jobs
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Build each service's Docker image
       - name: Build Telemetry Service
         run: docker build -t swarm-telemetry:latest ./backend/telemetry
 
@@ -78,29 +107,33 @@ jobs:
       - name: Build Dashboard
         run: docker build -t swarm-dashboard:latest ./frontend/dashboard
 
-  # ─── Docker Compose Deploy ───
+  # ─────────────────────────────────────────────────
+  # JOB 4: Deploy
+  # Deploys the entire system using docker compose
+  # Only runs on pushes to 'main' branch (not on PRs)
+  # ─────────────────────────────────────────────────
   deploy:
     name: Deploy with Docker Compose
     runs-on: ubuntu-latest
     needs: [docker-build]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'     # Only deploy from main branch
     steps:
       - uses: actions/checkout@v4
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose up -d --build
-          sleep 60
-          echo "✅ Deployment complete"
+          docker compose up -d --build      # Build and start all services
+          sleep 60                           # Wait for Java services to initialize
+          echo "Deployment complete"
 
-      - name: Health Check
+      - name: Health Check                   # Verify services are running
         run: |
           echo "Checking services..."
-          curl -f http://localhost:8001/health || echo "Telemetry: waiting..."
-          curl -f http://localhost:8003/health || echo "Anomaly: waiting..."
-          curl -f http://localhost:8004/health || echo "Alert: waiting..."
-          echo "✅ Health checks done"
+          curl -f http://localhost:8001/health || echo "Telemetry: starting..."
+          curl -f http://localhost:8003/health || echo "Anomaly: starting..."
+          curl -f http://localhost:8004/health || echo "Alert: starting..."
+          echo "Health checks done"
 
-      - name: Cleanup
+      - name: Cleanup                        # Always clean up after deploy test
         if: always()
         run: docker compose down -v

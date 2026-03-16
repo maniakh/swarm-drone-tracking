@@ -1,38 +1,64 @@
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║           PROMETHEUS CONFIGURATION                          ║
+# ╠═══════════════════════════════════════════════════════════════╣
+# ║  Prometheus scrapes metrics from all Java services           ║
+# ║  via Spring Boot Actuator endpoint: /actuator/prometheus    ║
+# ║                                                               ║
+# ║  Each service exposes metrics like:                           ║
+# ║    - JVM memory usage                                        ║
+# ║    - HTTP request counts                                     ║
+# ║    - Custom business metrics (telemetry_received_total, etc) ║
+# ╚═══════════════════════════════════════════════════════════════╝
 
+global:
+  scrape_interval: 15s       # How often to scrape metrics (default)
+  evaluation_interval: 15s   # How often to evaluate alert rules
+
+# Load alert rules from this file
 rule_files:
   - "alert_rules.yml"
 
+# Alertmanager configuration (empty = no external alerting)
 alerting:
   alertmanagers:
     - static_configs:
         - targets: []
 
+# ─── SCRAPE TARGETS ───
+# Each job defines which service to scrape and how
 scrape_configs:
+
+  # Prometheus scrapes itself (for self-monitoring)
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
 
+  # Telemetry Service (port 8001)
+  # Custom metrics: telemetry_received_total, active_drones
   - job_name: "telemetry-service"
-    metrics_path: "/actuator/prometheus"
+    metrics_path: "/actuator/prometheus"    # Spring Boot Actuator endpoint
     static_configs:
-      - targets: ["telemetry:8001"]
-    scrape_interval: 10s
+      - targets: ["telemetry:8001"]        # Docker internal hostname
+    scrape_interval: 10s                    # Scrape every 10 seconds
 
+  # Anomaly Detection Service (port 8003)
+  # Custom metrics: analyses_total, anomalies_detected_total
   - job_name: "anomaly-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["anomaly:8003"]
     scrape_interval: 10s
 
+  # Alert Service (port 8004)
+  # Custom metrics: alerts_generated_total
   - job_name: "alert-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["alert:8004"]
     scrape_interval: 10s
 
+  # Drone Management Service (port 8002)
+  # Standard Spring Boot metrics (JVM, HTTP, etc.)
   - job_name: "drone-mgmt-service"
     metrics_path: "/actuator/prometheus"
     static_configs:

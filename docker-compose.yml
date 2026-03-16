@@ -1,18 +1,39 @@
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║        SWARM DRONE TRACKING — Docker Compose Configuration             ║
+# ╠═══════════════════════════════════════════════════════════════════════════╣
+# ║  This single file deploys the ENTIRE system with one command:          ║
+# ║    docker compose up -d --build                                         ║
+# ║                                                                         ║
+# ║  Services (9 total):                                                    ║
+# ║    1. PostgreSQL    → Database for drone metadata & telemetry           ║
+# ║    2. Telemetry     → Simulates drone data + REST API (port 8001)      ║
+# ║    3. Drone Mgmt    → Drone CRUD operations (port 8002)                ║
+# ║    4. Anomaly       → Rule-based anomaly detection (port 8003)         ║
+# ║    5. Alert          → Alert management (port 8004)                     ║
+# ║    6. Dashboard      → React frontend (port 3000)                      ║
+# ║    7. Prometheus     → Metrics collection (port 9090)                  ║
+# ║    8. Grafana        → Monitoring dashboards (port 3001)               ║
+# ║    9. Loki           → Log aggregation (port 3100)                     ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
 services:
-  # ─── Database ───
+  # ─────────────────────────────────────────────────
+  # DATABASE — PostgreSQL 16
+  # Stores: drone metadata, telemetry history
+  # ─────────────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine             # Lightweight Alpine-based PostgreSQL
     container_name: swarm-postgres
     environment:
-      POSTGRES_DB: swarm_drone
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: swarm_drone            # Database name
+      POSTGRES_USER: postgres             # Username
+      POSTGRES_PASSWORD: postgres         # Password (change in production!)
     ports:
-      - "5432:5432"
+      - "5432:5432"                       # Expose PostgreSQL port
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
+      - postgres_data:/var/lib/postgresql/data                          # Persistent data
+      - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql   # Init script (runs on first start)
+    healthcheck:                          # Docker healthcheck — other services wait for this
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
@@ -20,35 +41,44 @@ services:
     networks:
       - swarm-net
 
-  # ─── Telemetry Service (Java Spring Boot) ───
+  # ─────────────────────────────────────────────────
+  # TELEMETRY SERVICE (Java Spring Boot)
+  # - Simulates 5 drones with realistic flight data
+  # - Provides REST API for dashboard to fetch positions
+  # - Forwards data to Anomaly Service for analysis
+  # ─────────────────────────────────────────────────
   telemetry:
-    build: ./backend/telemetry
+    build: ./backend/telemetry            # Builds from Dockerfile in this directory
     container_name: swarm-telemetry
     ports:
-      - "8001:8001"
+      - "8001:8001"                       # Telemetry API port
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres                   # Database hostname (Docker internal DNS)
       DB_PORT: 5432
       DB_NAME: swarm_drone
       DB_USER: postgres
       DB_PASS: postgres
-      ANOMALY_SERVICE_URL: http://anomaly:8003
-      SIMULATE_TELEMETRY: "true"
-      SIM_INTERVAL_MS: "3000"
-      NUM_DRONES: "5"
+      ANOMALY_SERVICE_URL: http://anomaly:8003  # Inter-service communication
+      SIMULATE_TELEMETRY: "true"          # Enable simulation mode
+      SIM_INTERVAL_MS: "3000"             # Generate data every 3 seconds
+      NUM_DRONES: "5"                     # Number of drones to simulate
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_healthy        # Wait for PostgreSQL to be ready
     networks:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Drone Management Service (Java Spring Boot) ───
+  # ─────────────────────────────────────────────────
+  # DRONE MANAGEMENT SERVICE (Java Spring Boot)
+  # - CRUD API for drone metadata
+  # - Auto-creates 5 default drones on startup
+  # ─────────────────────────────────────────────────
   drone-mgmt:
     build: ./backend/drone-mgmt
     container_name: swarm-drone-mgmt
     ports:
-      - "8002:8002"
+      - "8002:8002"                       # Drone Management API port
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -62,37 +92,51 @@ services:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Anomaly Detection Service (Java Spring Boot) ───
+  # ─────────────────────────────────────────────────
+  # ANOMALY DETECTION SERVICE (Java Spring Boot)
+  # - Receives telemetry data from Telemetry Service
+  # - Checks against rules (speed, battery, altitude, geo-fence)
+  # - Forwards detected anomalies to Alert Service
+  # ─────────────────────────────────────────────────
   anomaly:
     build: ./backend/anomaly
     container_name: swarm-anomaly
     ports:
-      - "8003:8003"
+      - "8003:8003"                       # Anomaly API port
     environment:
-      ALERT_SERVICE_URL: http://alert:8004
-      MAX_SPEED: "40"
-      MIN_BATTERY: "15"
-      MAX_ALTITUDE: "350"
+      ALERT_SERVICE_URL: http://alert:8004  # Forward anomalies to Alert Service
+      MAX_SPEED: "40"                     # Speed threshold (m/s)
+      MIN_BATTERY: "15"                   # Battery threshold (%)
+      MAX_ALTITUDE: "350"                 # Altitude threshold (meters)
     networks:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Alert Service (Java Spring Boot) ───
+  # ─────────────────────────────────────────────────
+  # ALERT SERVICE (Java Spring Boot)
+  # - Receives anomalies and creates alerts
+  # - Provides alert listing and acknowledgment API
+  # ─────────────────────────────────────────────────
   alert:
     build: ./backend/alert
     container_name: swarm-alert
     ports:
-      - "8004:8004"
+      - "8004:8004"                       # Alert API port
     networks:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Dashboard (React CDN + Nginx) ───
+  # ─────────────────────────────────────────────────
+  # DASHBOARD (React + Leaflet, served via Nginx)
+  # - FlightRadar24-style real-time monitoring UI
+  # - Polls backend APIs every 2 seconds
+  # - Dark theme with glassmorphism design
+  # ─────────────────────────────────────────────────
   dashboard:
     build: ./frontend/dashboard
     container_name: swarm-dashboard
     ports:
-      - "3000:3000"
+      - "3000:3000"                       # Dashboard URL: http://localhost:3000
     depends_on:
       - telemetry
       - anomaly
@@ -101,39 +145,48 @@ services:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Prometheus ───
+  # ─────────────────────────────────────────────────
+  # PROMETHEUS — Metrics Collection
+  # - Scrapes metrics from all Java services via /actuator/prometheus
+  # - Stores time-series data for Grafana dashboards
+  # ─────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.50.1
     container_name: swarm-prometheus
     ports:
-      - "9090:9090"
+      - "9090:9090"                       # Prometheus UI: http://localhost:9090
     volumes:
-      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./infra/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
-      - prometheus_data:/prometheus
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml       # Scrape config
+      - ./infra/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml     # Alert rules
+      - prometheus_data:/prometheus                                            # Persistent data
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--web.enable-lifecycle"
+      - "--web.enable-lifecycle"          # Enable config reload via API
     networks:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Grafana ───
+  # ─────────────────────────────────────────────────
+  # GRAFANA — Monitoring Dashboards
+  # - Pre-configured with Prometheus datasource
+  # - Includes "Swarm Drone Monitoring" dashboard
+  # - Login: admin / admin
+  # ─────────────────────────────────────────────────
   grafana:
     image: grafana/grafana:10.3.3
     container_name: swarm-grafana
     ports:
-      - "3001:3000"
+      - "3001:3000"                       # Grafana UI: http://localhost:3001
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_ADMIN_USER: admin       # Grafana admin username
+      GF_SECURITY_ADMIN_PASSWORD: admin   # Grafana admin password
+      GF_USERS_ALLOW_SIGN_UP: "false"     # Disable public sign-up
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./infra/grafana/provisioning/dashboards/drone-dashboard.json:/var/lib/grafana/dashboards/drone-dashboard.json
+      - grafana_data:/var/lib/grafana                                                        # Persistent data
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources       # Auto-configure datasources
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards          # Auto-configure dashboards
+      - ./infra/grafana/provisioning/dashboards/drone-dashboard.json:/var/lib/grafana/dashboards/drone-dashboard.json  # Dashboard JSON
     depends_on:
       - prometheus
       - loki
@@ -141,12 +194,16 @@ services:
       - swarm-net
     restart: unless-stopped
 
-  # ─── Loki ───
+  # ─────────────────────────────────────────────────
+  # LOKI — Log Aggregation
+  # - Collects logs from all services
+  # - Queryable via Grafana
+  # ─────────────────────────────────────────────────
   loki:
     image: grafana/loki:2.9.4
     container_name: swarm-loki
     ports:
-      - "3100:3100"
+      - "3100:3100"                       # Loki API: http://localhost:3100
     volumes:
       - ./infra/loki/loki-config.yml:/etc/loki/local-config.yaml
       - loki_data:/loki
@@ -155,12 +212,14 @@ services:
       - swarm-net
     restart: unless-stopped
 
+# ─── Persistent volumes (data survives container restarts) ───
 volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
   loki_data:
 
+# ─── Internal network (all services communicate here) ───
 networks:
   swarm-net:
     driver: bridge

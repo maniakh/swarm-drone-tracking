@@ -3,28 +3,50 @@ package com.swarm.telemetry.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * TELEMETRY DATA - JPA Entity (Database Table Mapping)
+ * =====================================================
+ * This class maps to the "telemetry" table in PostgreSQL.
+ * Each row represents a single telemetry reading from a drone at a point in time.
+ *
+ * JPA (Java Persistence API) annotations tell Spring how to map this object to a database table:
+ *   @Entity → Marks this class as a database entity
+ *   @Table  → Specifies the table name in PostgreSQL
+ *   @Id     → Marks the primary key field
+ *   @Column → Maps a field to a specific database column
+ *
+ * Fields explained:
+ *   - droneId   : Unique identifier for the drone (e.g., "DR-001")
+ *   - lat / lon : GPS coordinates (latitude / longitude) - Istanbul area
+ *   - altitude  : Flight altitude in meters
+ *   - speed     : Drone speed in meters per second (m/s)
+ *   - battery   : Battery level as percentage (0-100%)
+ *   - timestamp : When this reading was taken (ISO-8601 format)
+ */
 @Entity
 @Table(name = "telemetry")
 public class TelemetryData {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
     private Long id;
 
     @Column(name = "drone_id")
     private String droneId;
 
-    private double lat;
-    private double lon;
-    private double altitude;
-    private double speed;
-    private double battery;
+    private double lat;       // Latitude  (e.g., 41.01 for Istanbul)
+    private double lon;       // Longitude (e.g., 28.97 for Istanbul)
+    private double altitude;  // Meters above sea level
+    private double speed;     // Meters per second
+    private double battery;   // Percentage (0-100)
 
     @Column(name = "timestamp")
     private Instant timestamp;
 
+    // Default constructor required by JPA
     public TelemetryData() {}
 
+    // Full constructor for creating telemetry records programmatically
     public TelemetryData(String droneId, double lat, double lon, double altitude,
                          double speed, double battery, Instant timestamp) {
         this.droneId = droneId;
@@ -36,7 +58,7 @@ public class TelemetryData {
         this.timestamp = timestamp;
     }
 
-    // Getters & Setters
+    // ─── Getters & Setters (required by JPA and JSON serialization) ───
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getDroneId() { return droneId; }

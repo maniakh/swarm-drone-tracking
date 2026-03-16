@@ -1,22 +1,31 @@
+# ═══════════════════════════════════════════════════════
+# DRONE MANAGEMENT SERVICE — Spring Boot Configuration
+# ═══════════════════════════════════════════════════════
+
 server:
-  port: 8002
+  port: 8002                    # HTTP port for this service
 
 spring:
   application:
     name: drone-management-service
+
+  # ─── PostgreSQL Database Connection ───
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:swarm_drone}
     username: ${DB_USER:postgres}
     password: ${DB_PASS:postgres}
     driver-class-name: org.postgresql.Driver
+
+  # ─── JPA / Hibernate Configuration ───
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update          # Auto-create/update tables from entity classes
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect   # PostgreSQL-specific SQL dialect
 
+# ─── Actuator (Prometheus Metrics + Health Details) ───
 management:
   endpoints:
     web:
@@ -24,7 +33,7 @@ management:
         include: health,info,prometheus,metrics
   endpoint:
     health:
-      show-details: always
+      show-details: always      # Show detailed health info (DB connection status, etc.)
   metrics:
     export:
       prometheus:

@@ -1,10 +1,15 @@
+# ═══════════════════════════════════════════════════════
+# ANOMALY DETECTION SERVICE — Spring Boot Configuration
+# ═══════════════════════════════════════════════════════
+
 server:
-  port: 8003
+  port: 8003                              # HTTP port for this service
 
 spring:
   application:
-    name: anomaly-detection-service
+    name: anomaly-detection-service       # Service name
 
+# ─── Actuator (Prometheus Metrics) ───
 management:
   endpoints:
     web:
@@ -15,17 +20,22 @@ management:
       prometheus:
         enabled: true
 
+# ─── Inter-Service Communication ───
 alert:
-  service-url: ${ALERT_SERVICE_URL:http://alert:8004}
+  service-url: ${ALERT_SERVICE_URL:http://alert:8004}  # Alert Service URL
 
-# Anomaly thresholds
+# ─── Anomaly Detection Thresholds ───
+# These define what counts as an anomaly. Override via Docker env vars.
 thresholds:
-  max-speed: ${MAX_SPEED:40}
-  min-battery: ${MIN_BATTERY:15}
-  max-altitude: ${MAX_ALTITUDE:350}
-  min-altitude: ${MIN_ALTITUDE:5}
+  max-speed: ${MAX_SPEED:40}              # Speed above this (m/s) → SPEED_EXCEEDED
+  min-battery: ${MIN_BATTERY:15}          # Battery below this (%) → LOW_BATTERY
+  max-altitude: ${MAX_ALTITUDE:350}       # Altitude above this (m) → ALTITUDE_EXCEEDED
+  min-altitude: ${MIN_ALTITUDE:5}         # Altitude below this (m) → ALTITUDE_TOO_LOW
+
+  # Geo-fence: Istanbul area boundaries
+  # Drone outside this rectangle → GEO_FENCE_VIOLATION
   geo-fence:
-    lat-min: ${GEO_FENCE_LAT_MIN:40.8}
-    lat-max: ${GEO_FENCE_LAT_MAX:41.3}
-    lon-min: ${GEO_FENCE_LON_MIN:28.7}
-    lon-max: ${GEO_FENCE_LON_MAX:29.3}
+    lat-min: ${GEO_FENCE_LAT_MIN:40.8}   # South boundary
+    lat-max: ${GEO_FENCE_LAT_MAX:41.3}   # North boundary
+    lon-min: ${GEO_FENCE_LON_MIN:28.7}   # West boundary
+    lon-max: ${GEO_FENCE_LON_MAX:29.3}   # East boundary

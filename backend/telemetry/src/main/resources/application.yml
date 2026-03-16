@@ -1,33 +1,46 @@
+# ═══════════════════════════════════════════════════════
+# TELEMETRY SERVICE — Spring Boot Configuration
+# ═══════════════════════════════════════════════════════
+
 server:
-  port: 8001
+  port: 8001                    # HTTP port for this service
 
 spring:
   application:
-    name: telemetry-service
+    name: telemetry-service     # Service name (used in logs and monitoring)
+
+  # ─── PostgreSQL Database Connection ───
+  # Uses environment variables with defaults (for local development)
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:swarm_drone}
     username: ${DB_USER:postgres}
     password: ${DB_PASS:postgres}
+
+  # ─── JPA / Hibernate Configuration ───
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: update          # Auto-create/update database tables from entity classes
+    show-sql: false             # Don't log SQL queries (set to true for debugging)
 
+# ─── Spring Boot Actuator (Prometheus Metrics) ───
+# Actuator exposes operational endpoints like health and metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus,metrics
+        include: health,prometheus,metrics   # Which endpoints to expose
   metrics:
     export:
       prometheus:
-        enabled: true
+        enabled: true           # Enable Prometheus metrics export at /actuator/prometheus
 
-# Simulation config
+# ─── Drone Simulation Configuration ───
+# These values can be overridden via Docker environment variables
 simulation:
-  enabled: ${SIMULATE_TELEMETRY:true}
-  interval-ms: ${SIM_INTERVAL_MS:3000}
-  num-drones: ${NUM_DRONES:5}
+  enabled: ${SIMULATE_TELEMETRY:true}   # Enable/disable drone simulation
+  interval-ms: ${SIM_INTERVAL_MS:3000}  # Simulation tick interval (3 seconds)
+  num-drones: ${NUM_DRONES:5}           # Number of drones to simulate
 
+# ─── Inter-Service Communication ───
 anomaly:
-  service-url: ${ANOMALY_SERVICE_URL:http://anomaly:8003}
+  service-url: ${ANOMALY_SERVICE_URL:http://anomaly:8003}  # Anomaly Detection Service URL
