@@ -1,0 +1,33 @@
+server:
+  port: 8001
+
+spring:
+  application:
+    name: telemetry-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:swarm_drone}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Simulation config
+simulation:
+  enabled: ${SIMULATE_TELEMETRY:true}
+  interval-ms: ${SIM_INTERVAL_MS:3000}
+  num-drones: ${NUM_DRONES:5}
+
+anomaly:
+  service-url: ${ANOMALY_SERVICE_URL:http://anomaly:8003}

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+
+# Node
+node_modules/
+npm-debug.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# React Build
+frontend/dashboard/build/
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Volumes
+postgres_data/
+prometheus_data/
+grafana_data/
+loki_data/

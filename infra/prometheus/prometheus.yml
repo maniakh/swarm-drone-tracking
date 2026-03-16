@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "telemetry-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["telemetry:8001"]
+    scrape_interval: 10s
+
+  - job_name: "anomaly-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["anomaly:8003"]
+    scrape_interval: 10s
+
+  - job_name: "alert-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["alert:8004"]
+    scrape_interval: 10s
+
+  - job_name: "drone-mgmt-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["drone-mgmt:8002"]
+    scrape_interval: 15s

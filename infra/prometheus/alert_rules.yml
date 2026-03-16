@@ -1,0 +1,29 @@
+groups:
+  - name: drone_alerts
+    rules:
+      - alert: HighAnomalyRate
+        expr: rate(anomalies_detected_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High anomaly rate detected"
+          description: "Anomaly rate in the last 5 minutes: {{ $value }}/s"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "{{ $labels.instance }} has been unreachable for more than 1 minute"
+
+      - alert: HighTelemetryErrors
+        expr: rate(telemetry_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High telemetry error rate"
+          description: "Error rate: {{ $value }}/s"

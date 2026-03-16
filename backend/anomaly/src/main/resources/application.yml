@@ -1,0 +1,31 @@
+server:
+  port: 8003
+
+spring:
+  application:
+    name: anomaly-detection-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+alert:
+  service-url: ${ALERT_SERVICE_URL:http://alert:8004}
+
+# Anomaly thresholds
+thresholds:
+  max-speed: ${MAX_SPEED:40}
+  min-battery: ${MIN_BATTERY:15}
+  max-altitude: ${MAX_ALTITUDE:350}
+  min-altitude: ${MIN_ALTITUDE:5}
+  geo-fence:
+    lat-min: ${GEO_FENCE_LAT_MIN:40.8}
+    lat-max: ${GEO_FENCE_LAT_MAX:41.3}
+    lon-min: ${GEO_FENCE_LON_MIN:28.7}
+    lon-max: ${GEO_FENCE_LON_MAX:29.3}

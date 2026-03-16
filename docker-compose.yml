@@ -1,0 +1,166 @@
+services:
+  # ─── Database ───
+  postgres:
+    image: postgres:16-alpine
+    container_name: swarm-postgres
+    environment:
+      POSTGRES_DB: swarm_drone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - swarm-net
+
+  # ─── Telemetry Service (Java Spring Boot) ───
+  telemetry:
+    build: ./backend/telemetry
+    container_name: swarm-telemetry
+    ports:
+      - "8001:8001"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: swarm_drone
+      DB_USER: postgres
+      DB_PASS: postgres
+      ANOMALY_SERVICE_URL: http://anomaly:8003
+      SIMULATE_TELEMETRY: "true"
+      SIM_INTERVAL_MS: "3000"
+      NUM_DRONES: "5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Drone Management Service (Java Spring Boot) ───
+  drone-mgmt:
+    build: ./backend/drone-mgmt
+    container_name: swarm-drone-mgmt
+    ports:
+      - "8002:8002"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: swarm_drone
+      DB_USER: postgres
+      DB_PASS: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Anomaly Detection Service (Java Spring Boot) ───
+  anomaly:
+    build: ./backend/anomaly
+    container_name: swarm-anomaly
+    ports:
+      - "8003:8003"
+    environment:
+      ALERT_SERVICE_URL: http://alert:8004
+      MAX_SPEED: "40"
+      MIN_BATTERY: "15"
+      MAX_ALTITUDE: "350"
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Alert Service (Java Spring Boot) ───
+  alert:
+    build: ./backend/alert
+    container_name: swarm-alert
+    ports:
+      - "8004:8004"
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Dashboard (React CDN + Nginx) ───
+  dashboard:
+    build: ./frontend/dashboard
+    container_name: swarm-dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - telemetry
+      - anomaly
+      - alert
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Prometheus ───
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: swarm-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Grafana ───
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: swarm-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infra/grafana/provisioning/dashboards/drone-dashboard.json:/var/lib/grafana/dashboards/drone-dashboard.json
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+  # ─── Loki ───
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: swarm-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - swarm-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  swarm-net:
+    driver: bridge

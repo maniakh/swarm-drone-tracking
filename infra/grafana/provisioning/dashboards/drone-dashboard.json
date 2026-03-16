@@ -1,0 +1,204 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#38bdf8" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "active_drones", "legendFormat": "", "refId": "A" }],
+      "title": "Active Drones",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#22c55e" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "telemetry_received_total", "legendFormat": "", "refId": "A" }],
+      "title": "Total Telemetry Points",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#eab308" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "sum(anomalies_detected_total)", "legendFormat": "", "refId": "A" }],
+      "title": "Total Anomalies",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#ef4444" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "alerts_generated_total", "legendFormat": "", "refId": "A" }],
+      "title": "Total Alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#a855f7" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 0 },
+      "id": 5,
+      "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "analyses_total", "legendFormat": "", "refId": "A" }],
+      "title": "Analyses Performed",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "#06b6d4" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "id": 6,
+      "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [{ "expr": "count(up == 1)", "legendFormat": "", "refId": "A" }],
+      "title": "Services Up",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 20, "lineWidth": 2, "showPoints": "never" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 10,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "rate(telemetry_received_total[1m])", "legendFormat": "Telemetry/sec", "refId": "A" }],
+      "title": "Telemetry Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 20, "lineWidth": 2, "showPoints": "never" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 11,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(anomalies_detected_total{type=\"SPEED_EXCEEDED\"}[1m])", "legendFormat": "Speed Exceeded", "refId": "A" },
+        { "expr": "rate(anomalies_detected_total{type=\"LOW_BATTERY\"}[1m])", "legendFormat": "Low Battery", "refId": "B" },
+        { "expr": "rate(anomalies_detected_total{type=\"ALTITUDE_EXCEEDED\"}[1m])", "legendFormat": "Altitude Exceeded", "refId": "C" },
+        { "expr": "rate(anomalies_detected_total{type=\"GEO_FENCE_VIOLATION\"}[1m])", "legendFormat": "Geo-Fence Violation", "refId": "D" }
+      ],
+      "title": "Anomaly Detection Rate (by type)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 20, "lineWidth": 2, "showPoints": "never" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "id": 12,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "rate(alerts_generated_total[1m])", "legendFormat": "Alerts/sec", "refId": "A" }],
+      "title": "Alert Generation Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "id": 13,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "process_cpu_usage{job=\"telemetry-service\"}", "legendFormat": "Telemetry", "refId": "A" },
+        { "expr": "process_cpu_usage{job=\"anomaly-service\"}", "legendFormat": "Anomaly", "refId": "B" },
+        { "expr": "process_cpu_usage{job=\"alert-service\"}", "legendFormat": "Alert", "refId": "C" },
+        { "expr": "process_cpu_usage{job=\"drone-mgmt-service\"}", "legendFormat": "Drone Mgmt", "refId": "D" }
+      ],
+      "title": "CPU Usage (by service)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }, "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "id": 14,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "jvm_memory_used_bytes{job=\"telemetry-service\", area=\"heap\"}", "legendFormat": "Telemetry Heap", "refId": "A" },
+        { "expr": "jvm_memory_used_bytes{job=\"anomaly-service\", area=\"heap\"}", "legendFormat": "Anomaly Heap", "refId": "B" },
+        { "expr": "jvm_memory_used_bytes{job=\"alert-service\", area=\"heap\"}", "legendFormat": "Alert Heap", "refId": "C" },
+        { "expr": "jvm_memory_used_bytes{job=\"drone-mgmt-service\", area=\"heap\"}", "legendFormat": "Drone Mgmt Heap", "refId": "D" }
+      ],
+      "title": "JVM Heap Memory (by service)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "id": 15,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "rate(http_server_requests_seconds_count{job=\"telemetry-service\"}[1m])", "legendFormat": "Telemetry {{uri}}", "refId": "A" },
+        { "expr": "rate(http_server_requests_seconds_count{job=\"anomaly-service\"}[1m])", "legendFormat": "Anomaly {{uri}}", "refId": "B" },
+        { "expr": "rate(http_server_requests_seconds_count{job=\"alert-service\"}[1m])", "legendFormat": "Alert {{uri}}", "refId": "C" }
+      ],
+      "title": "HTTP Request Rate (by service & endpoint)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
+      "id": 16,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "jvm_threads_live_threads{job=\"telemetry-service\"}", "legendFormat": "Telemetry", "refId": "A" },
+        { "expr": "jvm_threads_live_threads{job=\"anomaly-service\"}", "legendFormat": "Anomaly", "refId": "B" },
+        { "expr": "jvm_threads_live_threads{job=\"alert-service\"}", "legendFormat": "Alert", "refId": "C" },
+        { "expr": "jvm_threads_live_threads{job=\"drone-mgmt-service\"}", "legendFormat": "Drone Mgmt", "refId": "D" }
+      ],
+      "title": "JVM Live Threads (by service)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }, "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 29 },
+      "id": 17,
+      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "process_uptime_seconds{job=\"telemetry-service\"}", "legendFormat": "Telemetry", "refId": "A" },
+        { "expr": "process_uptime_seconds{job=\"anomaly-service\"}", "legendFormat": "Anomaly", "refId": "B" },
+        { "expr": "process_uptime_seconds{job=\"alert-service\"}", "legendFormat": "Alert", "refId": "C" },
+        { "expr": "process_uptime_seconds{job=\"drone-mgmt-service\"}", "legendFormat": "Drone Mgmt", "refId": "D" }
+      ],
+      "title": "Service Uptime",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 38,
+  "tags": ["drone", "swarm", "telemetry", "devops"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "Swarm Drone Monitoring",
+  "uid": "swarm-drone-monitoring",
+  "version": 2
+}
